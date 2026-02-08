@@ -1,10 +1,13 @@
 {
+  "name": "claude-toast",
+  "owner": {
+    "name": "jk278"
+  },
   "plugins": [
     {
       "name": "claude-toast",
-      "version": "1.0.0",
-      "description": "Windows toast notifications for Claude Code — permission requests and task completion",
-      "source": "./"
+      "source": "./",
+      "description": "Windows toast notifications for Claude Code — permission requests and task completion"
     }
   ]
 }

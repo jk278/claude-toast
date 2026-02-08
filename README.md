@@ -12,12 +12,9 @@ Windows toast notifications for Claude Code.
 
 ## Install
 
-```bash
-# Development / local testing
-claude --plugin-dir ./claude-toast
-
-# Project scope (shared with team)
-claude plugin install claude-toast@<marketplace> --scope project
+```
+/plugin marketplace add jk278/claude-toast
+/plugin install claude-toast@claude-toast
 ```
 
 ## How it works
