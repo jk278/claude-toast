@@ -14,7 +14,7 @@ Windows toast notifications for Claude Code.
 
 ```
 /plugin marketplace add jk278/claude-toast
-/plugin install claude-toast@claude-toast
+/plugin install claude-toast
 ```
 
 ## How it works
