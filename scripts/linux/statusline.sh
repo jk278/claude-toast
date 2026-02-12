@@ -7,8 +7,6 @@ json=$(cat)
 model=$(echo "$json" | jq -r '.model.display_name')
 current_dir=$(echo "$json" | jq -r '.workspace.current_dir' | xargs basename)
 session_id=$(echo "$json" | jq -r '.session_id[:8]')
-cols=$(tput cols 2>/dev/null || echo 120)
-is_narrow=$( (( cols < 100 )) && echo true || echo false )
 
 # Git branch
 git_branch=""
@@ -65,21 +63,14 @@ if (( display_percent > 80 )); then
 else
   percent_color="${ESC}[32m"
 fi
+progress="${percent_color}${bar} ${display_percent}%${ESC}[0m"
 
-line2="${percent_color}${bar} ${display_percent}%${ESC}[0m · ${ESC}[38;5;208m⬡ ${current_calls}c${ESC}[0m"
+calls="${ESC}[38;5;208m⬡ ${current_calls}c${ESC}[0m"
 
 if $SHOW_COST; then
   cost_fmt=$(awk "BEGIN { printf \"%.2f\", $cost }")
-  line2="${line2} · ${ESC}[38;5;136m\$${cost_fmt}${ESC}[0m"
+  cost_str="${ESC}[38;5;136m\$${cost_fmt}${ESC}[0m"
 fi
-
-line2="${line2} · ⧖ ${time_str}"
 
 # Output
-prefix="${ESC}[36m⚡${model}${ESC}[0m · ${ESC}[34m□ ${current_dir}${ESC}[0m${git_branch}"
-if [ "$is_narrow" = "true" ]; then
-  echo "${prefix}"
-  echo "    ${line2}"
-else
-  echo "${prefix} · ${line2}"
-fi
+echo "${ESC}[36m⚡${model}${ESC}[0m · ${ESC}[34m□ ${current_dir}${ESC}[0m${git_branch} · ${progress} · ${calls} · ${cost_str} · ⧖ ${time_str}"

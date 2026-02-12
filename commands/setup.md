@@ -3,7 +3,10 @@ description: Set up toast notifications and statusline for Claude Code
 allowed-tools: Read, Write, Edit, Bash(powershell -NoProfile -ExecutionPolicy Bypass -File *), Bash(bash *)
 ---
 
+Execute all steps immediately using tool calls — do not narrate or describe steps before executing them.
+
 Detect platform first. Use `win` scripts on Windows, `linux` scripts on Linux/macOS.
+Steps 1 & 2 have no dependencies — run them in parallel.
 
 **Shell note:** The Bash tool runs through an outer shell that interprets `$`.
 Use `\$env:USERPROFILE` when passing PowerShell `$env:` variables via Bash tool.
@@ -24,7 +27,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/linux/setup.sh"
 
 ### 2. Read `~/.claude/settings.json` (create `{}` if missing). Preserve all existing settings.
 
-### 3. Merge `statusLine` into `~/.claude/settings.json` (skip if already present):
+### 3. Merge `statusLine` into `~/.claude/settings.json` (skip if already present, no agents):
 
 **Windows:**
 ```json

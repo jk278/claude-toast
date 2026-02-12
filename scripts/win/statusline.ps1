@@ -5,7 +5,6 @@
 
 # ===== Initialization =====
 $ESC = [char]27
-$isNarrow = $Host.UI.RawUI.WindowSize.Width -lt 100
 $showCost = $true  # Set to $false to show tokens instead
 $inputJson = $input | Out-String | ConvertFrom-Json
 $model = $inputJson.model.display_name
@@ -76,41 +75,23 @@ $hours = [math]::Round($duration / 3600, 1)
 $timeStr = "$ESC[90m${hours}h$ESC[0m"
 
 # ===== Display Building =====
-# Output lines initialization
-$line1 = ""  # First line: Model · Dir · Branch
-$line2 = ""  # Second line (narrow): progress · calls · tokens · time
-
-# Progress bar
 $barSize = 10
 $filled = [math]::Round($displayPercent / (100 / $barSize))
 $empty = $barSize - $filled
-# Available styles: █░ | ▓░ | ▰▱ | ◆◇ | ●○ | ■□ | ━─ | ▮╌
 $bar = ("■" * $filled) + ("□" * $empty)
 $percentColor = if ($displayPercent -gt 80) { "$ESC[33m" } else { "$ESC[32m" }
-$line2 += $percentColor + $bar + " " + $displayPercent + "%$ESC[0m · "
+$progress = $percentColor + $bar + " " + $displayPercent + "%$ESC[0m"
 
-# Line2 content: calls · cost/tokens · time
-$line2 += "$ESC[38;5;208m⬡ ${currentCalls}c$ESC[0m"
+$calls = "$ESC[38;5;208m⬡ ${currentCalls}c$ESC[0m"
 
 if ($showCost) {
-    $line2 += " · $ESC[38;5;136m$" + [math]::Round($cost, 2) + "$ESC[0m"
+    $costStr = "$ESC[38;5;136m$" + [math]::Round($cost, 2) + "$ESC[0m"
 }
 else {
     $inFmt = if ($inTokens -ge 1MB) { [math]::Round($inTokens / 1MB, 1).ToString() + "M" } else { [math]::Round($inTokens / 1KB, 0).ToString() + "k" }
     $outFmt = if ($outTokens -ge 1MB) { [math]::Round($outTokens / 1MB, 1).ToString() + "M" } else { [math]::Round($outTokens / 1KB, 0).ToString() + "k" }
-    $line2 += " · " + "$ESC[90m↑$ESC[0m$ESC[38;5;136m$inFmt$ESC[0m $ESC[90m↓$ESC[0m$ESC[38;5;136m$outFmt$ESC[0m"
+    $costStr = "$ESC[90m↑$ESC[0m$ESC[38;5;136m$inFmt$ESC[0m $ESC[90m↓$ESC[0m$ESC[38;5;136m$outFmt$ESC[0m"
 }
-
-$line2 += " · ⧖ " + $timeStr
 
 # ===== Output =====
-# Format output
-if ($isNarrow) {
-    Write-Output "$ESC[36m⚡$model$ESC[0m · $ESC[34m□ $currentDir$ESC[0m$gitBranch$line1"
-    if ($line2) {
-        Write-Output "    $line2"
-    }
-} else {
-    $extra = $line1 + " · " + $line2
-    Write-Output "$ESC[36m⚡$model$ESC[0m · $ESC[34m□ $currentDir$ESC[0m$gitBranch$extra"
-}
+Write-Output "$ESC[36m⚡$model$ESC[0m · $ESC[34m□ $currentDir$ESC[0m$gitBranch · $progress · $calls · $costStr · ⧖ $timeStr"
