@@ -1,6 +1,6 @@
 # Stop hook toast notification with quote
 $AppId = 'Claude Code'
-$AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\assets')).Path
+$AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..\assets')).Path
 $SuccessIconPath = Join-Path $AssetsDir 'success.png'
 
 $json = $input | ConvertFrom-Json
@@ -8,8 +8,8 @@ $json = $input | ConvertFrom-Json
 [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime] | Out-Null
 [Windows.Data.Xml.Dom.XmlDocument, Windows.Data, ContentType=WindowsRuntime] | Out-Null
 
-$presetsPath = Join-Path $PSScriptRoot '..\presets.json'
-$configPath = Join-Path $PSScriptRoot '..\config.json'
+$presetsPath = Join-Path $PSScriptRoot '..\..\presets.json'
+$configPath = Join-Path $PSScriptRoot '..\..\config.json'
 $detail = 'Done'
 try {
     $presets = Get-Content $presetsPath -Raw | ConvertFrom-Json

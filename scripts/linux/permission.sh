@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Permission hook notification via notify-send
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ICON="$SCRIPT_DIR/../../assets/help.png"
+
+json=$(cat)
+tool_name=$(echo "$json" | jq -r '.tool_name')
+tool_input=$(echo "$json" | jq -r '.tool_input')
+
+case "$tool_name" in
+  Read|Edit|Write)
+    file=$(echo "$tool_input" | jq -r '.file_path' | xargs basename)
+    detail="$tool_name: $file" ;;
+  Glob|Grep)
+    pattern=$(echo "$tool_input" | jq -r '.pattern')
+    detail="$tool_name: $pattern" ;;
+  Bash|Task)
+    desc=$(echo "$tool_input" | jq -r '.description')
+    detail="$tool_name: $desc" ;;
+  AskUserQuestion)
+    q=$(echo "$tool_input" | jq -r '.questions[0].question')
+    detail="Ask: $q" ;;
+  *)
+    detail="$tool_name" ;;
+esac
+
+notify-send -i "$ICON" "Permission" "$detail"

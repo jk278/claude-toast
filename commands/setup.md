@@ -1,33 +1,54 @@
 ---
-description: Set up toast notifications and statusline for Claude Code (Windows only)
-allowed-tools: Read, Write, Edit, Bash(powershell -NoProfile -ExecutionPolicy Bypass -File *)
+description: Set up toast notifications and statusline for Claude Code
+allowed-tools: Read, Write, Edit, Bash(powershell -NoProfile -ExecutionPolicy Bypass -File *), Bash(bash *)
 ---
 
-Windows-only. If not on Windows, inform the user and stop.
+Detect platform first. Use `win` scripts on Windows, `linux` scripts on Linux/macOS.
 
 **Shell note:** The Bash tool runs through an outer shell that interprets `$`.
 Use `\$env:USERPROFILE` when passing PowerShell `$env:` variables via Bash tool.
 
 ## Flow
 
-1. Create Start Menu shortcut (toast sender identity):
+### 1. Platform setup
+
+**Windows:**
 ```
-powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/setup.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/win/setup.ps1"
 ```
 
-2. Read `~/.claude/settings.json` (create `{}` if missing). Preserve all existing settings.
+**Linux:**
+```
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/linux/setup.sh"
+```
 
-3. Merge `statusLine` into `~/.claude/settings.json` (skip if already present):
+### 2. Read `~/.claude/settings.json` (create `{}` if missing). Preserve all existing settings.
+
+### 3. Merge `statusLine` into `~/.claude/settings.json` (skip if already present):
+
+**Windows:**
 ```json
 {
   "statusLine": {
     "type": "command",
-    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/statusline.ps1\""
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/statusline.ps1\""
   }
 }
 ```
 
-4. Write hooks to `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json`:
+**Linux:**
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/linux/statusline.sh\""
+  }
+}
+```
+
+### 4. Write hooks to `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json`:
+
+**Windows:**
 ```json
 {
   "hooks": {
@@ -37,7 +58,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scrip
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/permission.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/permission.ps1\""
           }
         ]
       }
@@ -48,7 +69,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scrip
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/stop.ps1\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/stop.ps1\""
           }
         ]
       }
@@ -57,4 +78,34 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scrip
 }
 ```
 
-5. Write back. Report success.
+**Linux:**
+```json
+{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/linux/permission.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/linux/stop.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 5. Write back. Report success.

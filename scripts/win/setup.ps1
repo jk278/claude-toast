@@ -1,6 +1,6 @@
 # Create Start Menu shortcut with AppUserModelID for toast sender identity
 $AppId = 'Claude Code'
-$AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\assets')).Path
+$AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..\assets')).Path
 $AppIconPath = Join-Path $AssetsDir 'favicon.ico'
 $ShortcutPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Claude Code.lnk"
 

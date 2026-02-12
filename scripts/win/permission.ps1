@@ -1,6 +1,6 @@
 # Permission toast notification
 $AppId = 'Claude Code'
-$AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\assets')).Path
+$AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..\assets')).Path
 $HelpIconPath = Join-Path $AssetsDir 'help.png'
 
 $json = $input | ConvertFrom-Json
