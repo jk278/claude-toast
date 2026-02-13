@@ -24,8 +24,12 @@ Run `/claude-tools:setup` to enable toast notifications and statusline. This wri
 
 ## Uninstall
 
-Run `/claude-tools:reset` before uninstalling to remove the Start Menu shortcut.
+Uninstalling the plugin does not remove the Start Menu shortcut. Delete it manually:
+
+```powershell
+Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Claude Code.lnk" -Force
+```
 
 ## How it works
 
-On first setup, a Start Menu shortcut is created with a custom `AppUserModelID` (`Claude Code`). This allows Windows to display the Claude icon as the toast sender. Subsequent notifications use the registered identity for a native look.
+On setup, a Start Menu shortcut is created with a custom `AppUserModelID` (`Claude Code`). This allows Windows to display the Claude icon as the toast sender. Re-running setup updates the shortcut in place.

@@ -112,3 +112,10 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/linux/setup.sh"
 ```
 
 ### 5. Write back. Report success.
+
+### 6. Remind the user
+
+To remove the Start Menu shortcut (uninstall cleanup), run:
+```
+Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Claude Code.lnk" -Force
+```

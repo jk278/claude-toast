@@ -18,7 +18,7 @@ config.json      User config: active API + custom APIs (gitignored)
 
 ## Setup
 
-Run `/claude-tools:setup` to enable. Writes hooks and statusLine into `~/.claude/settings.json` and creates the Start Menu shortcut for toast sender identity.
+Run `/claude-tools:setup` to enable. Writes hooks and statusLine into `~/.claude/settings.json` and creates (or updates) the Start Menu shortcut for toast sender identity.
 
 ## Hooks
 
@@ -42,4 +42,4 @@ Version in `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` mu
 - `win/permission.ps1` — switch on `tool_name` to build detail text
 - `win/stop.ps1` — fetch quote from active API, fallback to "Done"
 - `win/statusline.ps1` — rich status bar (model, git branch, context %, calls, cost, duration)
-- `win/reset.ps1` — remove Start Menu shortcut
+
