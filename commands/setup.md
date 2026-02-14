@@ -1,6 +1,6 @@
 ---
 description: Set up toast notifications and statusline for Claude Code
-allowed-tools: Read, Write, Edit, Bash(powershell -NoProfile -ExecutionPolicy Bypass -File *), Bash(bash *)
+allowed-tools: Read, Write, Edit, Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File *), Bash(powershell -NoProfile -ExecutionPolicy Bypass -File *), Bash(bash *)
 ---
 
 Execute all steps immediately using tool calls — do not narrate or describe steps before executing them.
@@ -13,11 +13,19 @@ Use `\$env:USERPROFILE` when passing PowerShell `$env:` variables via Bash tool.
 
 ## Flow
 
+### 0. Detect PowerShell (Windows only)
+
+Detect which PowerShell is available. Set `$PS` for use in all subsequent steps:
+```bash
+if command -v pwsh &>/dev/null; then echo "pwsh"; else echo "powershell"; fi
+```
+Store the output as `$PS` (e.g. `pwsh` or `powershell`). Use `$PS` wherever PowerShell is invoked below.
+
 ### 1. Platform setup
 
 **Windows:**
 ```
-powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/win/setup.ps1"
+$PS -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/win/setup.ps1"
 ```
 
 **Linux:**
@@ -34,7 +42,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/linux/setup.sh"
 {
   "statusLine": {
     "type": "command",
-    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/statusline.ps1\""
+    "command": "$PS -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/statusline.ps1\""
   }
 }
 ```
@@ -61,7 +69,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/linux/setup.sh"
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/permission.ps1\""
+            "command": "$PS -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/permission.ps1\""
           }
         ]
       }
@@ -72,7 +80,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/linux/setup.sh"
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/stop.ps1\""
+            "command": "$PS -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/stop.ps1\""
           }
         ]
       }
