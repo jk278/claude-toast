@@ -3,6 +3,17 @@
 ESC=$'\033'
 SHOW_COST=true
 
+# Nerd Font icons
+i_bolt=$'\uf0e7'    # nf-fa-bolt
+i_folder=$'\uf07b'  # nf-fa-folder
+i_branch=$'\ue0a0'  # nf-pl-branch
+i_cube=$'\uf1b2'    # nf-fa-cube
+i_clock=$'\uf017'   # nf-fa-clock_o
+i_zenmux=$'\uf080'  # nf-fa-bar-chart
+i_refresh=$'\uf021' # nf-fa-refresh
+i_up=$'\uf093'      # nf-fa-upload
+i_down=$'\uf019'    # nf-fa-download
+
 json=$(cat)
 model=$(echo "$json" | jq -r '.model.display_name')
 current_dir=$(echo "$json" | jq -r '.workspace.current_dir' | xargs basename)
@@ -13,7 +24,7 @@ git_branch=""
 if [ -d .git ]; then
   head=$(cat .git/HEAD 2>/dev/null)
   if [[ "$head" =~ ref:\ refs/heads/(.*) ]]; then
-    git_branch=" · ${ESC}[38;5;97m⎇ ${BASH_REMATCH[1]}${ESC}[0m"
+    git_branch=" · ${ESC}[38;5;97m${i_branch} ${BASH_REMATCH[1]}${ESC}[0m"
   fi
 fi
 
@@ -47,17 +58,21 @@ fi
 
 # Cost or tokens
 cost=$(echo "$json" | jq -r '.cost.total_cost_usd // 0')
+in_tokens=$(echo "$json"  | jq -r '.context_window.total_input_tokens // 0')
+out_tokens=$(echo "$json" | jq -r '.context_window.total_output_tokens // 0')
 
-# Duration
+# Duration formatting (xhx)
 duration_ms=$(echo "$json" | jq -r '.cost.total_duration_ms // 0')
-hours=$(awk "BEGIN { printf \"%.1f\", $duration_ms / 3600000 }")
-time_str="${ESC}[90m${hours}h${ESC}[0m"
+d_int=$(awk "BEGIN { printf \"%d\", $duration_ms / 3600000 }")
+d_tenth=$(awk "BEGIN { printf \"%d\", int(($duration_ms / 3600000 - $d_int) * 10) }")
+time_str="${ESC}[90m${d_int}h${d_tenth}${ESC}[0m"
 
-# Progress bar
+# Progress bar (█ / ░)
 bar_size=10
 filled=$(( display_percent * bar_size / 100 ))
 empty=$(( bar_size - filled ))
-bar=$(printf '■%.0s' $(seq 1 $filled 2>/dev/null))$(printf '□%.0s' $(seq 1 $empty 2>/dev/null))
+char_filled=$'\u2588'; char_empty=$'\u2591'
+bar=$(printf "${char_filled}%.0s" $(seq 1 $filled 2>/dev/null))$(printf "${char_empty}%.0s" $(seq 1 $empty 2>/dev/null))
 if (( display_percent > 80 )); then
   percent_color="${ESC}[33m"
 else
@@ -65,11 +80,18 @@ else
 fi
 progress="${percent_color}${bar} ${display_percent}%${ESC}[0m"
 
-calls="${ESC}[38;5;208m⬡ ${current_calls}c${ESC}[0m"
+calls="${ESC}[38;5;208m${i_cube} ${current_calls}c${ESC}[0m"
 
 if $SHOW_COST; then
   cost_fmt=$(awk "BEGIN { printf \"%.2f\", $cost }")
-  cost_str="${ESC}[38;5;136m\$${cost_fmt}${ESC}[0m"
+  cost_str="${ESC}[38;5;136m$ ${cost_fmt}${ESC}[0m"
+else
+  fmt_tokens() {
+    local n=$1
+    if (( n >= 1048576 )); then awk "BEGIN { printf \"%.1fM\", $n/1048576 }"
+    else awk "BEGIN { printf \"%dk\", int($n/1024) }"; fi
+  }
+  cost_str="${ESC}[90m${i_up} ${ESC}[0m${ESC}[38;5;136m$(fmt_tokens "$in_tokens")${ESC}[0m ${ESC}[90m${i_down} ${ESC}[0m${ESC}[38;5;136m$(fmt_tokens "$out_tokens")${ESC}[0m"
 fi
 
 # ===== Zenmux Usage =====
@@ -77,13 +99,27 @@ zenmux_segment=""
 plugin_root="$(cd "$(dirname "$0")/../.." && pwd)"
 usages_file="$plugin_root/usages.json"
 
+format_z_reset() {
+  local end_str="$1" end_ts left_s l_int l_tenth
+  end_ts=$(date -d "$end_str UTC" +%s 2>/dev/null) || return
+  left_s=$(( end_ts - $(date -u +%s) ))
+  (( left_s <= 0 )) && return
+  l_int=$(awk "BEGIN { printf \"%d\", $left_s / 3600 }")
+  l_tenth=$(awk "BEGIN { printf \"%d\", int(($left_s / 3600 - $l_int) * 10) }")
+  echo "${i_refresh}${l_int}h${l_tenth}"
+}
+
+z_col() {
+  local pct; pct=$(awk "BEGIN { printf \"%d\", $1 * 100 }")
+  (( pct >= 90 )) && echo "${ESC}[31m" && return
+  (( pct >= 70 )) && echo "${ESC}[33m" && return
+  echo "${ESC}[32m"
+}
+
 if [ -f "$usages_file" ]; then
   env_file="$plugin_root/.env"
   if [ -f "$env_file" ]; then
-    set -a
-    # shellcheck disable=SC1090
-    source "$env_file"
-    set +a
+    set -a; source "$env_file"; set +a
   fi
 
   zenmux_enabled=false
@@ -98,41 +134,48 @@ if [ -f "$usages_file" ]; then
     z_session_id="${!_sid_env}"
     z_session_sig="${!_sig_env}"
 
-    if [ -n "$z_session_id" ] && [ -n "$z_session_sig" ]; then
-      z_cache_file="/tmp/zenmux_usage_cache.txt"
-      z_now=$(date +%s)
-      week_rate=""; hour5_rate=""
+    if [ -z "$z_session_id" ] || [ -z "$z_session_sig" ]; then
+      zenmux_segment=" · ${ESC}[31m${i_zenmux} !cfg${ESC}[0m"
+    else
+      z_cache_file="/tmp/claude_zenmux_usage_cache.txt"
+      z_now=$(date -u +%s)
+      week_rate=""; hour5_rate=""; week_end=""; h5_end=""
 
       if [ -f "$z_cache_file" ]; then
-        IFS='|' read -r _cw _ch _cts < "$z_cache_file"
-        (( z_now - _cts < 60 )) && week_rate="$_cw" && hour5_rate="$_ch"
+        IFS='|' read -r _ch _he _cw _we _cts < "$z_cache_file"
+        if (( z_now - _cts < 60 )) && [ -n "$_he" ]; then
+          hour5_rate="$_ch"; h5_end="$_he"; week_rate="$_cw"; week_end="$_we"
+        fi
       fi
 
       if [ -z "$week_rate" ]; then
         _resp=$(curl -s --max-time 3 \
           "https://zenmux.ai/api/subscription/get_current_usage" \
           -H "Cookie: sessionId=${z_session_id}; sessionId.sig=${z_session_sig}" 2>/dev/null)
-        if echo "$_resp" | jq -e '.success' > /dev/null 2>&1; then
+        if echo "$_resp" | jq -e '.success == true' > /dev/null 2>&1; then
           week_rate=$(echo "$_resp"  | jq -r '.data[] | select(.periodType=="week")   | .usedRate')
           hour5_rate=$(echo "$_resp" | jq -r '.data[] | select(.periodType=="hour_5") | .usedRate')
-          echo "${week_rate}|${hour5_rate}|${z_now}" > "$z_cache_file"
+          week_end=$(echo "$_resp"   | jq -r '.data[] | select(.periodType=="week")   | .cycleEndTime')
+          h5_end=$(echo "$_resp"     | jq -r '.data[] | select(.periodType=="hour_5") | .cycleEndTime')
+          echo "${hour5_rate}|${h5_end}|${week_rate}|${week_end}|${z_now}" > "$z_cache_file"
+        elif [ -n "$_resp" ]; then
+          zenmux_segment=" · ${ESC}[31m${i_zenmux} !auth${ESC}[0m"
+        else
+          zenmux_segment=" · ${ESC}[90m${i_zenmux} …${ESC}[0m"
         fi
       fi
 
       if [ -n "$week_rate" ] && [ -n "$hour5_rate" ]; then
-        _zcol() {
-          local pct; pct=$(awk "BEGIN { printf \"%d\", $1 * 100 }")
-          (( pct >= 90 )) && echo "${ESC}[31m" && return
-          (( pct >= 70 )) && echo "${ESC}[33m" && return
-          echo "${ESC}[32m"
-        }
         w_pct=$(awk  "BEGIN { printf \"%d\", $week_rate  * 100 }")
         h5_pct=$(awk "BEGIN { printf \"%d\", $hour5_rate * 100 }")
-        zenmux_segment=" · Z: $(_zcol "$week_rate")${w_pct}%${ESC}[0m $(_zcol "$hour5_rate")${h5_pct}%${ESC}[0m"
+        w_col=$(z_col "$week_rate"); h5_col=$(z_col "$hour5_rate")
+        h5_reset=$(format_z_reset "$h5_end")
+        w_reset=$(format_z_reset "$week_end")
+        zenmux_segment=" · ${i_zenmux} ${h5_col}H${h5_pct}%${ESC}[0m${h5_reset}/${w_col}W${w_pct}%${ESC}[0m${w_reset}"
       fi
     fi
   fi
 fi
 
 # Output
-echo "${ESC}[36m⚡${model}${ESC}[0m · ${ESC}[34m□ ${current_dir}${ESC}[0m${git_branch} · ${progress} · ${calls} · ${cost_str} · ⧖ ${time_str}${zenmux_segment}"
+echo "${ESC}[36m${i_bolt} ${model}${ESC}[0m · ${ESC}[34m${i_folder} ${current_dir}${ESC}[0m${git_branch} · ${progress} · ${calls} · ${cost_str} · ${i_clock} ${time_str}${zenmux_segment}"

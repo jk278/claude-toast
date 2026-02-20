@@ -6,18 +6,27 @@
 # ===== Initialization =====
 $ESC = [char]27
 $showCost = $true  # Set to $false to show tokens instead
+# Nerd Font icons
+$iBolt   = [char]0xF0E7  # nf-fa-bolt
+$iFolder = [char]0xF07B  # nf-fa-folder
+$iBranch = [char]0xE0A0  # nf-pl-branch
+$iCube   = [char]0xF1B2  # nf-fa-cube
+$iClock  = [char]0xF017  # nf-fa-clock_o
+$iZenmux   = [char]0xF080  # nf-fa-bar-chart
+$iRefresh  = [char]0xF021  # nf-fa-refresh
+$iUp       = [char]0xF093  # nf-fa-upload
+$iDown     = [char]0xF019  # nf-fa-download
 $inputJson = $input | Out-String | ConvertFrom-Json
 $model = $inputJson.model.display_name
 $currentDir = Split-Path -Leaf $inputJson.workspace.current_dir
 
 # ===== Git Branch =====
-# Get git branch if available
 $gitBranch = ""
 if (Test-Path .git) {
     try {
         $headContent = Get-Content .git/HEAD -ErrorAction Stop
         if ($headContent -match "ref: refs/heads/(.*)") {
-            $gitBranch = " · $ESC[38;5;97m⎇ " + $matches[1] + "$ESC[0m"
+            $gitBranch = " · $ESC[38;5;97m$iBranch $($matches[1])$ESC[0m"
         }
     } catch {}
 }
@@ -69,28 +78,29 @@ $inTokens = $inputJson.context_window.total_input_tokens
 $outTokens = $inputJson.context_window.total_output_tokens
 $cost = $inputJson.cost.total_cost_usd
 
-# Duration formatting (always in hours, 1 decimal)
+# Duration formatting (xhx)
 $duration = $inputJson.cost.total_duration_ms / 1000
-$hours = [math]::Round($duration / 3600, 1)
-$timeStr = "$ESC[90m${hours}h$ESC[0m"
+$dInt   = [math]::Floor($duration / 3600)
+$dTenth = [math]::Floor(($duration / 3600 - $dInt) * 10)
+$timeStr = "$ESC[90m${dInt}h${dTenth}$ESC[0m"
 
 # ===== Display Building =====
 $barSize = 10
 $filled = [math]::Round($displayPercent / (100 / $barSize))
 $empty = $barSize - $filled
-$bar = ("■" * $filled) + ("□" * $empty)
+$bar = ([char]0x2588).ToString() * $filled + ([char]0x2591).ToString() * $empty
 $percentColor = if ($displayPercent -gt 80) { "$ESC[33m" } else { "$ESC[32m" }
 $progress = $percentColor + $bar + " " + $displayPercent + "%$ESC[0m"
 
-$calls = "$ESC[38;5;208m⬡ ${currentCalls}c$ESC[0m"
+$calls = "$ESC[38;5;208m$iCube ${currentCalls}c$ESC[0m"
 
 if ($showCost) {
-    $costStr = "$ESC[38;5;136m$" + [math]::Round($cost, 2) + "$ESC[0m"
+    $costStr = "$ESC[38;5;136m$ " + [math]::Round($cost, 2) + "$ESC[0m"
 }
 else {
     $inFmt = if ($inTokens -ge 1MB) { [math]::Round($inTokens / 1MB, 1).ToString() + "M" } else { [math]::Round($inTokens / 1KB, 0).ToString() + "k" }
     $outFmt = if ($outTokens -ge 1MB) { [math]::Round($outTokens / 1MB, 1).ToString() + "M" } else { [math]::Round($outTokens / 1KB, 0).ToString() + "k" }
-    $costStr = "$ESC[90m↑$ESC[0m$ESC[38;5;136m$inFmt$ESC[0m $ESC[90m↓$ESC[0m$ESC[38;5;136m$outFmt$ESC[0m"
+    $costStr = "$ESC[90m$iUp $ESC[0m$ESC[38;5;136m$inFmt$ESC[0m $ESC[90m$iDown $ESC[0m$ESC[38;5;136m$outFmt$ESC[0m"
 }
 
 # ===== Zenmux Usage =====
@@ -114,15 +124,19 @@ if (Test-Path $usagesFile) {
         $sessionId  = [System.Environment]::GetEnvironmentVariable($usages.zenmux.sessionIdEnv)
         $sessionSig = [System.Environment]::GetEnvironmentVariable($usages.zenmux.sessionSigEnv)
 
-        if ($sessionId -and $sessionSig) {
-            $zCacheFile = "$env:TEMP\zenmux_usage_cache.txt"
+        if (-not ($sessionId -and $sessionSig)) {
+            $zenmuxSegment = " · $ESC[31m$iZenmux !cfg$ESC[0m"
+        } else {
+            $zCacheFile = "$env:TEMP\claude_zenmux_usage_cache.txt"
             $zNow = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
             $weekRate = $null; $hour5Rate = $null
+            $weekEnd = $null; $h5End = $null
 
             if (Test-Path $zCacheFile) {
                 $zParts = (Get-Content $zCacheFile) -split "\|"
-                if ($zParts.Count -eq 3 -and ($zNow - [long]$zParts[2]) -lt 60) {
-                    $weekRate = [double]$zParts[0]; $hour5Rate = [double]$zParts[1]
+                if ($zParts.Count -eq 5 -and ($zNow - [long]$zParts[4]) -lt 60) {
+                    $hour5Rate = [double]$zParts[0]; $h5End  = $zParts[1]
+                    $weekRate  = [double]$zParts[2]; $weekEnd = $zParts[3]
                 }
             }
 
@@ -133,11 +147,17 @@ if (Test-Path $usagesFile) {
                         -Headers @{ "Cookie" = "sessionId=$sessionId; sessionId.sig=$sessionSig" } `
                         -TimeoutSec 3
                     if ($resp.success) {
-                        $weekRate  = ($resp.data | Where-Object { $_.periodType -eq "week"   }).usedRate
-                        $hour5Rate = ($resp.data | Where-Object { $_.periodType -eq "hour_5" }).usedRate
-                        "$weekRate|$hour5Rate|$zNow" | Out-File $zCacheFile -Encoding UTF8
+                        $wData  = $resp.data | Where-Object { $_.periodType -eq "week" }
+                        $h5Data = $resp.data | Where-Object { $_.periodType -eq "hour_5" }
+                        $weekRate  = $wData.usedRate;  $weekEnd  = $wData.cycleEndTime
+                        $hour5Rate = $h5Data.usedRate; $h5End    = $h5Data.cycleEndTime
+                        "$hour5Rate|$h5End|$weekRate|$weekEnd|$zNow" | Out-File $zCacheFile -Encoding UTF8
+                    } else {
+                        $zenmuxSegment = " · $ESC[31m$iZenmux !auth$ESC[0m"
                     }
-                } catch {}
+                } catch {
+                    $zenmuxSegment = " · $ESC[90m$iZenmux …$ESC[0m"
+                }
             }
 
             if ($null -ne $weekRate -and $null -ne $hour5Rate) {
@@ -145,15 +165,26 @@ if (Test-Path $usagesFile) {
                     $p = $r * 100
                     if ($p -ge 90) { "$ESC[31m" } elseif ($p -ge 70) { "$ESC[33m" } else { "$ESC[32m" }
                 }
+                function Format-ZReset($endStr) {
+                    try {
+                        $left = [datetime]::Parse($endStr) - [datetime]::UtcNow
+                        if ($left.TotalSeconds -le 0) { return "" }
+                        $hInt   = [math]::Floor($left.TotalHours)
+                        $hTenth = [math]::Floor(($left.TotalHours - $hInt) * 10)
+                        return "$iRefresh${hInt}h${hTenth}"
+                    } catch { return "" }
+                }
                 $wPct  = [math]::Round($weekRate  * 100)
                 $h5Pct = [math]::Round($hour5Rate * 100)
                 $wCol  = Get-ZUsageColor $weekRate
                 $h5Col = Get-ZUsageColor $hour5Rate
-                $zenmuxSegment = " · Z: ${wCol}${wPct}%$ESC[0m ${h5Col}${h5Pct}%$ESC[0m"
+                $h5Reset = if ($h5End) { "$ESC[90m$(Format-ZReset $h5End)$ESC[0m" } else { "" }
+                $wReset  = if ($weekEnd) { "$ESC[90m$(Format-ZReset $weekEnd)$ESC[0m" } else { "" }
+                $zenmuxSegment = " · $iZenmux ${h5Col}H${h5Pct}%$ESC[0m$h5Reset/${wCol}W${wPct}%$ESC[0m$wReset"
             }
         }
     }
 }
 
 # ===== Output =====
-Write-Output "$ESC[36m⚡$model$ESC[0m · $ESC[34m□ $currentDir$ESC[0m$gitBranch · $progress · $calls · $costStr · ⧖ $timeStr$zenmuxSegment"
+Write-Output "$ESC[36m$iBolt $model$ESC[0m · $ESC[34m$iFolder $currentDir$ESC[0m$gitBranch · $progress · $calls · $costStr · $iClock $timeStr$zenmuxSegment"
