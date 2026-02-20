@@ -7,10 +7,11 @@ SHOW_COST=true
 i_bolt=$'\uf0e7'    # nf-fa-bolt
 i_folder=$'\uf07b'  # nf-fa-folder
 i_branch=$'\ue0a0'  # nf-pl-branch
-i_cube=$'\uf1b2'    # nf-fa-cube
+i_cube=$'\uf292'    # nf-fa-hashtag
 i_clock=$'\uf017'   # nf-fa-clock_o
 i_zenmux=$'\uf080'  # nf-fa-bar-chart
 i_refresh=$'\uf021' # nf-fa-refresh
+i_usd=$'\uf155'     # nf-fa-usd
 i_up=$'\uf093'      # nf-fa-upload
 i_down=$'\uf019'    # nf-fa-download
 
@@ -65,7 +66,7 @@ out_tokens=$(echo "$json" | jq -r '.context_window.total_output_tokens // 0')
 duration_ms=$(echo "$json" | jq -r '.cost.total_duration_ms // 0')
 d_int=$(awk "BEGIN { printf \"%d\", $duration_ms / 3600000 }")
 d_tenth=$(awk "BEGIN { printf \"%d\", int(($duration_ms / 3600000 - $d_int) * 10) }")
-time_str="${ESC}[90m${d_int}h${d_tenth}${ESC}[0m"
+time_str="${ESC}[90m${d_int}h${d_tenth/#0/}${ESC}[0m"
 
 # Progress bar (█ / ░)
 bar_size=10
@@ -84,7 +85,7 @@ calls="${ESC}[38;5;208m${i_cube} ${current_calls}c${ESC}[0m"
 
 if $SHOW_COST; then
   cost_fmt=$(awk "BEGIN { printf \"%.2f\", $cost }")
-  cost_str="${ESC}[38;5;136m$ ${cost_fmt}${ESC}[0m"
+  cost_str="${ESC}[38;5;136m${i_usd} ${cost_fmt}${ESC}[0m"
 else
   fmt_tokens() {
     local n=$1
@@ -106,7 +107,7 @@ format_z_reset() {
   (( left_s <= 0 )) && return
   l_int=$(awk "BEGIN { printf \"%d\", $left_s / 3600 }")
   l_tenth=$(awk "BEGIN { printf \"%d\", int(($left_s / 3600 - $l_int) * 10) }")
-  echo "${i_refresh}${l_int}h${l_tenth}"
+  echo " ${i_refresh} ${l_int}h${l_tenth/#0/}"
 }
 
 z_col() {
@@ -171,7 +172,7 @@ if [ -f "$usages_file" ]; then
         w_col=$(z_col "$week_rate"); h5_col=$(z_col "$hour5_rate")
         h5_reset=$(format_z_reset "$h5_end")
         w_reset=$(format_z_reset "$week_end")
-        zenmux_segment=" · ${i_zenmux} ${h5_col}H${h5_pct}%${ESC}[0m${h5_reset}/${w_col}W${w_pct}%${ESC}[0m${w_reset}"
+        zenmux_segment=" · ${i_zenmux} ${h5_col}H${h5_pct}%${ESC}[0m${h5_reset} / ${w_col}W${w_pct}%${ESC}[0m${w_reset}"
       fi
     fi
   fi

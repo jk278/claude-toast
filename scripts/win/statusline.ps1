@@ -10,10 +10,11 @@ $showCost = $true  # Set to $false to show tokens instead
 $iBolt   = [char]0xF0E7  # nf-fa-bolt
 $iFolder = [char]0xF07B  # nf-fa-folder
 $iBranch = [char]0xE0A0  # nf-pl-branch
-$iCube   = [char]0xF1B2  # nf-fa-cube
+$iCube   = [char]0xF292  # nf-fa-hashtag
 $iClock  = [char]0xF017  # nf-fa-clock_o
 $iZenmux   = [char]0xF080  # nf-fa-bar-chart
 $iRefresh  = [char]0xF021  # nf-fa-refresh
+$iUsd      = [char]0xF155  # nf-fa-usd
 $iUp       = [char]0xF093  # nf-fa-upload
 $iDown     = [char]0xF019  # nf-fa-download
 $inputJson = $input | Out-String | ConvertFrom-Json
@@ -82,7 +83,7 @@ $cost = $inputJson.cost.total_cost_usd
 $duration = $inputJson.cost.total_duration_ms / 1000
 $dInt   = [math]::Floor($duration / 3600)
 $dTenth = [math]::Floor(($duration / 3600 - $dInt) * 10)
-$timeStr = "$ESC[90m${dInt}h${dTenth}$ESC[0m"
+$timeStr = "$ESC[90m${dInt}h$(if ($dTenth) { $dTenth })$ESC[0m"
 
 # ===== Display Building =====
 $barSize = 10
@@ -95,7 +96,7 @@ $progress = $percentColor + $bar + " " + $displayPercent + "%$ESC[0m"
 $calls = "$ESC[38;5;208m$iCube ${currentCalls}c$ESC[0m"
 
 if ($showCost) {
-    $costStr = "$ESC[38;5;136m$ " + [math]::Round($cost, 2) + "$ESC[0m"
+    $costStr = "$ESC[38;5;136m$iUsd " + [math]::Round($cost, 2) + "$ESC[0m"
 }
 else {
     $inFmt = if ($inTokens -ge 1MB) { [math]::Round($inTokens / 1MB, 1).ToString() + "M" } else { [math]::Round($inTokens / 1KB, 0).ToString() + "k" }
@@ -171,16 +172,16 @@ if (Test-Path $usagesFile) {
                         if ($left.TotalSeconds -le 0) { return "" }
                         $hInt   = [math]::Floor($left.TotalHours)
                         $hTenth = [math]::Floor(($left.TotalHours - $hInt) * 10)
-                        return "$iRefresh${hInt}h${hTenth}"
+                        return "$iRefresh ${hInt}h$(if ($hTenth) { $hTenth })"
                     } catch { return "" }
                 }
                 $wPct  = [math]::Round($weekRate  * 100)
                 $h5Pct = [math]::Round($hour5Rate * 100)
                 $wCol  = Get-ZUsageColor $weekRate
                 $h5Col = Get-ZUsageColor $hour5Rate
-                $h5Reset = if ($h5End) { "$ESC[90m$(Format-ZReset $h5End)$ESC[0m" } else { "" }
-                $wReset  = if ($weekEnd) { "$ESC[90m$(Format-ZReset $weekEnd)$ESC[0m" } else { "" }
-                $zenmuxSegment = " · $iZenmux ${h5Col}H${h5Pct}%$ESC[0m$h5Reset/${wCol}W${wPct}%$ESC[0m$wReset"
+                $h5Reset = if ($h5End) { " $ESC[90m$(Format-ZReset $h5End)$ESC[0m" } else { "" }
+                $wReset  = if ($weekEnd) { " $ESC[90m$(Format-ZReset $weekEnd)$ESC[0m" } else { "" }
+                $zenmuxSegment = " · $iZenmux ${h5Col}H${h5Pct}%$ESC[0m$h5Reset / ${wCol}W${wPct}%$ESC[0m$wReset"
             }
         }
     }
