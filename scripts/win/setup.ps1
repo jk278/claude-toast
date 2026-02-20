@@ -1,3 +1,8 @@
+# Install BurntToast module if not present
+if (-not (Get-Module -ListAvailable BurntToast)) {
+    Install-Module BurntToast -Scope CurrentUser -Force
+}
+
 # Create Start Menu shortcut with AppUserModelID for toast sender identity
 $AppId = 'Claude Code'
 $AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..\assets')).Path

@@ -9,7 +9,7 @@ Toast notifications, statusline, and agent skills for Claude Code.
 
 ## Requirements
 
-- Windows 10+ or Linux
+- Windows 10+ with PowerShell 7 (`pwsh`) or Linux
 
 ## Install
 
@@ -24,10 +24,11 @@ Run `/claude-tools:setup` to enable toast notifications and statusline. This wri
 
 ## Uninstall
 
-Uninstalling the plugin does not remove the Start Menu shortcut. Delete it manually:
+Uninstalling the plugin does not remove the Start Menu shortcut. Setup may have installed the BurntToast module if it wasn't already present. Remove manually if needed:
 
 ```powershell
 Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Claude Code.lnk" -Force
+Uninstall-Module BurntToast
 ```
 
 ## How it works

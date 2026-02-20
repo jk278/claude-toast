@@ -1,5 +1,4 @@
 # Permission toast notification
-$AppId = 'Claude Code'
 $AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..\assets')).Path
 $HelpIconPath = Join-Path $AssetsDir 'help.png'
 
@@ -24,21 +23,14 @@ $detail = switch ($toolName) {
     default { $toolName }
 }
 
-[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime] | Out-Null
-[Windows.Data.Xml.Dom.XmlDocument, Windows.Data, ContentType=WindowsRuntime] | Out-Null
+Add-Type -TypeDefinition @'
+using System.Runtime.InteropServices;
+public class AppId {
+    [DllImport("shell32.dll")]
+    public static extern int SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string v);
+}
+'@
+[AppId]::SetCurrentProcessExplicitAppUserModelID('Claude Code') | Out-Null
 
-$Xml = @"
-<toast>
-  <visual>
-    <binding template="ToastGeneric">
-      <image src="$HelpIconPath" placement="appLogoOverride"/>
-      <text>Permission</text>
-      <text hint-maxLines="3">$detail</text>
-    </binding>
-  </visual>
-</toast>
-"@
-
-$XmlDoc = New-Object Windows.Data.Xml.Dom.XmlDocument
-$XmlDoc.LoadXml($Xml)
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($AppId).Show($XmlDoc)
+Import-Module BurntToast -ErrorAction Stop
+New-BurntToastNotification -Text 'Permission', $detail -AppLogo $HelpIconPath

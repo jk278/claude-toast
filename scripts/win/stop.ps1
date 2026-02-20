@@ -1,12 +1,8 @@
 # Stop hook toast notification with quote
-$AppId = 'Claude Code'
 $AssetsDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..\assets')).Path
 $SuccessIconPath = Join-Path $AssetsDir 'success.png'
 
 $json = $input | ConvertFrom-Json
-
-[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime] | Out-Null
-[Windows.Data.Xml.Dom.XmlDocument, Windows.Data, ContentType=WindowsRuntime] | Out-Null
 
 $configPath  = Join-Path $PSScriptRoot '..\..\config.json'
 $presetsPath = Join-Path $PSScriptRoot '..\..\presets.json'
@@ -27,18 +23,14 @@ try {
     }
 } catch {}
 
-$Xml = @"
-<toast>
-  <visual>
-    <binding template="ToastGeneric">
-      <image src="$SuccessIconPath" placement="appLogoOverride"/>
-      <text>Work Done</text>
-      <text hint-maxLines="3">$detail</text>
-    </binding>
-  </visual>
-</toast>
-"@
+Add-Type -TypeDefinition @'
+using System.Runtime.InteropServices;
+public class AppId {
+    [DllImport("shell32.dll")]
+    public static extern int SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string v);
+}
+'@
+[AppId]::SetCurrentProcessExplicitAppUserModelID('Claude Code') | Out-Null
 
-$XmlDoc = New-Object Windows.Data.Xml.Dom.XmlDocument
-$XmlDoc.LoadXml($Xml)
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($AppId).Show($XmlDoc)
+Import-Module BurntToast -ErrorAction Stop
+New-BurntToastNotification -Text 'Work Done', $detail -AppLogo $SuccessIconPath
