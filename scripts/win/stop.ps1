@@ -8,19 +8,13 @@ $json = $input | ConvertFrom-Json
 [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType=WindowsRuntime] | Out-Null
 [Windows.Data.Xml.Dom.XmlDocument, Windows.Data, ContentType=WindowsRuntime] | Out-Null
 
+$configPath  = Join-Path $PSScriptRoot '..\..\config.json'
 $presetsPath = Join-Path $PSScriptRoot '..\..\presets.json'
-$configPath = Join-Path $PSScriptRoot '..\..\config.json'
 $detail = 'Done'
 try {
-    $presets = Get-Content $presetsPath -Raw | ConvertFrom-Json
-    $active = 'zenquotes'
-    $userApis = $null
-    if (Test-Path $configPath) {
-        $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
-        if ($cfg.active) { $active = $cfg.active }
-        $userApis = $cfg.apis
-    }
-    $spec = if ($userApis.$active) { $userApis.$active } else { $presets.$active }
+    $file = if (Test-Path $configPath) { $configPath } else { $presetsPath }
+    $cfg  = Get-Content $file -Raw | ConvertFrom-Json
+    $spec = $cfg.apis.($cfg.active)
     if ($spec.parse -eq 'text') {
         $detail = (Invoke-WebRequest -Uri $spec.url -TimeoutSec 3 -UseBasicParsing).Content.Trim()
     } else {

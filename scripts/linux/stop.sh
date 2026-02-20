@@ -12,18 +12,10 @@ CONFIG="$SCRIPT_DIR/../../config.json"
 json=$(cat)
 detail="Done"
 
-if command -v jq &>/dev/null && [ -f "$PRESETS" ]; then
-  active="zenquotes"
-  user_apis="{}"
-  if [ -f "$CONFIG" ]; then
-    cfg_active=$(jq -r '.active // empty' "$CONFIG")
-    [ -n "$cfg_active" ] && active="$cfg_active"
-    user_apis=$(jq -r '.apis // {}' "$CONFIG")
-  fi
-
-  # User API takes priority over preset
-  spec=$(echo "$user_apis" | jq -r ".[\"$active\"] // empty")
-  [ -z "$spec" ] && spec=$(jq -r ".[\"$active\"]" "$PRESETS")
+if command -v jq &>/dev/null; then
+  file="$CONFIG"; [ -f "$file" ] || file="$PRESETS"
+  active=$(jq -r '.active' "$file")
+  spec=$(jq -r ".apis[\"$active\"]" "$file")
 
   parse=$(echo "$spec" | jq -r '.parse')
   url=$(echo "$spec" | jq -r '.url')

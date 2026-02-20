@@ -27,10 +27,9 @@ Run `/claude-tools:setup` to enable. Writes hooks and statusLine into `~/.claude
 
 ## Quote API
 
-- Presets defined in `presets.json`, user config in `config.json`
-- `stop.ps1` merges both: user custom APIs take priority over presets
-- Default active: `zenquotes` (when no config.json)
-- Config format: `{ "active": "<name>", "apis": { "<name>": { "url", "parse", "field?" } } }`
+- Both `presets.json` and `config.json` share the same format: `{ "active": "<name>", "apis": { "<name>": { "url", "parse", "field?" } } }`
+- `stop.ps1`/`stop.sh`: use `config.json` if present, else fall back to `presets.json`
+- `/claude-tools:config` copies `presets.json` → `config.json` on first run
 
 ## Config Command
 
