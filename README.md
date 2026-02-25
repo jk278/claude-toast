@@ -32,7 +32,7 @@ Run `/claude-tools:config` to edit plugin config files (quote API, usage provide
 
 ```
 /plugin marketplace update claude-tools
-/plugin update claude-tools
+/plugin → select → update
 ```
 
 ## Uninstall (Windows only)
