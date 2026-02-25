@@ -1,6 +1,6 @@
 # claude-tools
 
-Windows toast notification plugin for Claude Code.
+Statusline, toast notifications, and agent skills for Claude Code.
 
 ## Structure
 

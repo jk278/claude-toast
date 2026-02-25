@@ -1,17 +1,17 @@
 {
   "name": "claude-tools",
   "owner": {
-    "name": "jk278"
+    "name": "0xjax"
   },
   "metadata": {
-    "description": "Toast notifications for Claude Code — permission requests and task completion",
-    "version": "0.8.0"
+    "description": "Statusline, toast notifications, and agent skills for Claude Code",
+    "version": "0.8.1"
   },
   "plugins": [
     {
       "name": "claude-tools",
       "source": "./",
-      "description": "Toast notifications for Claude Code — permission requests and task completion",
+      "description": "Statusline, toast notifications, and agent skills for Claude Code",
       "category": "notification",
       "tags": ["windows", "toast", "notification", "permission", "alert"]
     }

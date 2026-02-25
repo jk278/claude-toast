@@ -16,7 +16,7 @@ Toast notifications, statusline, and agent skills for Claude Code.
 ## Install
 
 ```
-/plugin marketplace add jk278/claude-tools
+/plugin marketplace add 0xjax/claude-tools
 /plugin install claude-tools
 ```
 
@@ -34,8 +34,6 @@ Run `/claude-tools:config` to edit plugin config files (quote API, usage provide
 /plugin marketplace update claude-tools
 /plugin update claude-tools
 ```
-
-Then restart Claude Code.
 
 ## Uninstall (Windows only)
 
