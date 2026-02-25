@@ -31,7 +31,7 @@ Run `/claude-tools:config` to edit plugin config files (quote API, usage provide
 ## Update
 
 ```
-/plugin marketplace update
+/plugin marketplace update claude-tools
 /plugin update claude-tools
 ```
 
