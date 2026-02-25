@@ -109,9 +109,10 @@ else {
 # ===== Zenmux Usage =====
 $zenmuxSegment = ""
 $pluginRoot = (Get-Item "$PSScriptRoot\..\.." ).FullName
+$cacheDir   = (Get-Item "$PSScriptRoot\..\..\.." ).FullName
 
 # Load .env once (shared by all provider blocks)
-$envFile = Join-Path $pluginRoot ".env"
+$envFile = Join-Path $cacheDir ".env"
 if (Test-Path $envFile) {
   Get-Content $envFile | ForEach-Object {
     if ($_ -match "^([^#][^=]*)=(.*)$") {

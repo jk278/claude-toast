@@ -13,7 +13,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ICON="$SCRIPT_DIR/../../assets/success.png"
 PRESETS="$SCRIPT_DIR/../../presets.json"
-CONFIG="$SCRIPT_DIR/../../config.json"
+CONFIG="$SCRIPT_DIR/../../../config.json"
 
 json=$(cat)
 detail="Done"

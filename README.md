@@ -4,12 +4,13 @@ Toast notifications, statusline, and agent skills for Claude Code.
 
 - **Permission** — notifies when Claude requests tool permission (PermissionRequest)
 - **Work Done** — notifies when Claude finishes a task (Stop), with a daily quote
-- **Statusline** — rich status bar showing model, git branch, context usage, API calls, cost, and duration
+- **Statusline** — rich status bar showing model, git branch, context usage, API calls, cost, duration, etc.
 - **Codex** — invoke OpenAI Codex CLI (codex exec, codex resume) from Claude Code
 
 ## Requirements
 
 - Windows 10+ with PowerShell 7 (`pwsh`) or Linux
+- [Bun](https://bun.sh/) (hook entry point)
 - Terminal using a [Nerd Font](https://www.nerdfonts.com/) for statusline icons (recommended: [JetBrains Maple Mono](https://github.com/SpaceTimee/Fusion-JetBrainsMapleMono))
 
 ## Install
@@ -21,7 +22,11 @@ Toast notifications, statusline, and agent skills for Claude Code.
 
 ## Setup
 
-Run `/claude-tools:setup` to enable toast notifications and statusline. This writes hooks and statusLine config into `~/.claude/settings.json` and creates the Start Menu shortcut for toast sender identity.
+Run `/claude-tools:setup` to enable toast notifications and statusline. This writes statusLine config into `~/.claude/settings.json` and (Windows) creates a Start Menu shortcut with a custom `AppUserModelID` for toast sender identity.
+
+## Config
+
+Run `/claude-tools:config` to edit plugin config files (quote API, usage providers, weather).
 
 ## Update
 
@@ -30,14 +35,9 @@ Run `/claude-tools:setup` to enable toast notifications and statusline. This wri
 /plugin update claude-tools
 ```
 
-After updating, restart your shell — if using VS Code or Alacritty, restart the application. Then re-run setup and config:
+Then restart Claude Code.
 
-```
-/claude-tools:setup
-/claude-tools:config
-```
-
-## Uninstall
+## Uninstall (Windows only)
 
 Uninstalling the plugin does not remove the Start Menu shortcut. Setup may have installed the BurntToast module if it wasn't already present. Remove manually if needed:
 
@@ -45,7 +45,3 @@ Uninstalling the plugin does not remove the Start Menu shortcut. Setup may have 
 Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Claude Code.lnk" -Force
 Uninstall-Module BurntToast
 ```
-
-## How it works
-
-On setup, a Start Menu shortcut is created with a custom `AppUserModelID` (`Claude Code`). This allows Windows to display the Claude icon as the toast sender. Re-running setup updates the shortcut in place.

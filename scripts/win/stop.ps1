@@ -10,7 +10,7 @@ $SuccessIconPath = Join-Path $AssetsDir 'success.png'
 
 $json = $input | ConvertFrom-Json
 
-$configPath  = Join-Path $PSScriptRoot '..\..\config.json'
+$configPath  = Join-Path $PSScriptRoot '..\..\..\config.json'
 $presetsPath = Join-Path $PSScriptRoot '..\..\presets.json'
 $detail = 'Done'
 try {

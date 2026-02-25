@@ -100,9 +100,10 @@ fi
 # ===== Zenmux Usage =====
 zenmux_segment=""
 plugin_root="$(cd "$(dirname "$0")/../.." && pwd)"
+cache_dir="$(cd "$(dirname "$0")/../../.." && pwd)"
 
 # Load .env once (shared by all provider blocks)
-_env_file="$plugin_root/.env"
+_env_file="$cache_dir/.env"
 if [ -f "$_env_file" ]; then
   set -a; source "$_env_file"; set +a
 fi

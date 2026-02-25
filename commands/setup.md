@@ -1,15 +1,12 @@
 ---
 description: Set up toast notifications and statusline for Claude Code
-allowed-tools: Read, Write, Edit, Bash(pwsh -NoProfile -ExecutionPolicy Bypass -File *), Bash(bash *)
+allowed-tools: Read, Write, Edit, Bash
 ---
 
 Execute all steps immediately using tool calls — do not narrate or describe steps before executing them.
 
 Detect platform first. Use `win` scripts on Windows, `linux` scripts on Linux/macOS.
 Steps 1 & 2 have no dependencies — run them in parallel.
-
-**Shell note:** The Bash tool runs through an outer shell that interprets `$`.
-Use `\$env:USERPROFILE` when passing PowerShell `$env:` variables via Bash tool.
 
 ## Flow
 
@@ -25,97 +22,18 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/win
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/linux/setup.sh"
 ```
 
-### 2. Read `~/.claude/settings.json` (create `{}` if missing). Preserve all existing settings.
+### 2. Deploy statusLine
 
-### 3. Always overwrite `statusLine` in `~/.claude/settings.json` with the current plugin path:
-
-**Windows:**
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/statusline.ps1\""
-  }
-}
+Run via Bash to get the cache dir and copy the wrapper:
+```
+CACHE_DIR=$(dirname "${CLAUDE_PLUGIN_ROOT}") && cp "${CLAUDE_PLUGIN_ROOT}/scripts/statusline.ts" "$CACHE_DIR/statusline.ts" && echo "$CACHE_DIR"
 ```
 
-**Linux:**
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/linux/statusline.sh\""
-  }
-}
-```
+Read `~/.claude/settings.json` (create `{}` if missing). Set `statusLine.command` to `bun "<CACHE_DIR>/statusline.ts"` using the echoed path literally. Write back.
 
-### 4. Write hooks to `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json`:
+### 3. Report success.
 
-**Windows:**
-```json
-{
-  "hooks": {
-    "PermissionRequest": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/permission.ps1\""
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/scripts/win/stop.ps1\""
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-**Linux:**
-```json
-{
-  "hooks": {
-    "PermissionRequest": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/linux/permission.sh\""
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/linux/stop.sh\""
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### 5. Write back. Report success.
-
-### 6. Remind the user
-
-Hooks take effect after **restarting Claude Code**.
+### 4. Remind the user (Windows only)
 
 To remove the Start Menu shortcut (uninstall cleanup), run:
 ```
