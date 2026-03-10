@@ -16,6 +16,8 @@ References (at plugin root, read-only):
 
 ## Flow
 
+**MUST execute steps in order. Do NOT skip steps or use hardcoded paths.**
+
 1. Run `CACHE_DIR=$(dirname "${CLAUDE_PLUGIN_ROOT}") && echo "$CACHE_DIR"` via Bash. Print the result.
 2. Use `test -f` via Bash to check if `$CACHE_DIR/config.json` exists. If not, copy `${CLAUDE_PLUGIN_ROOT}/presets.json` → `$CACHE_DIR/config.json`.
 3. Use `test -f` via Bash to check if `$CACHE_DIR/.env` exists. If not, copy `${CLAUDE_PLUGIN_ROOT}/.env.example` → `$CACHE_DIR/.env`.
