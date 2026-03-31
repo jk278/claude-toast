@@ -1,7 +1,7 @@
 {
   "name": "claude-tools",
   "description": "Statusline, toast notifications, and agent skills for Claude Code",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "author": {
     "name": "0xjax",
     "url": "https://github.com/0xjax"

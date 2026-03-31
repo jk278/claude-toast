@@ -24,7 +24,8 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
 ### Quick Reference
 | Use case | Sandbox mode | Key flags |
 | --- | --- | --- |
-| Read-only review or analysis | `read-only` | `--sandbox read-only 2>/dev/null` |
+| Review (find defects) | `read-only` | `--sandbox read-only 2>/dev/null` |
+| Review (challenge design) | `read-only` | `--sandbox read-only 2>/dev/null` + prompt framing |
 | Apply local edits | `workspace-write` | `--sandbox workspace-write --full-auto 2>/dev/null` |
 | Permit network or broad access | `danger-full-access` | `--sandbox danger-full-access --full-auto 2>/dev/null` |
 | Resume recent session | Inherited from original | `echo "prompt" \| codex exec --skip-git-repo-check resume --last 2>/dev/null` |
@@ -33,6 +34,7 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
 ## Following Up
 - After every `codex` command, use `AskUserQuestion` to confirm next steps or decide whether to resume with `codex exec resume --last`.
 - When resuming, pipe the new prompt via stdin: `echo "new prompt" | codex exec resume --last 2>/dev/null`.
+- **CRITICAL — review output**: Present findings and STOP. Do NOT fix any issues. Ask the user which issues (if any) they want fixed before touching any file.
 
 ## Error Handling
 - Stop and report failures whenever `codex exec` exits non-zero; request direction before retrying.
