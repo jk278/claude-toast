@@ -58,11 +58,13 @@ out_tokens=$(echo "$json" | jq -r '.context_window.total_output_tokens // 0')
 
 # Progress bar (█/░, 6 chars)
 bar_size=6
-filled=$(( display_percent * bar_size / 100 ))
+max_percent=30
+_capped=$(( display_percent > max_percent ? max_percent : display_percent ))
+filled=$(( _capped * bar_size / max_percent ))
 empty=$(( bar_size - filled ))
 char_filled=$'\u2588'; char_empty=$'\u2591'
 bar=$(printf "${char_filled}%.0s" $(seq 1 $filled 2>/dev/null))$(printf "${char_empty}%.0s" $(seq 1 $empty 2>/dev/null))
-if (( display_percent > 80 )); then
+if (( display_percent > max_percent * 80 / 100 )); then
   percent_color="${ESC}[33m"
 else
   percent_color="${ESC}[32m"

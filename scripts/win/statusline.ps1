@@ -111,8 +111,9 @@ else {
 }
 
 # ===== Display: Progress Bar =====
-$percentColor = if ($displayPercent -gt 80) { "$ESC[33m" } else { "$ESC[32m" }
-$bar = Format-Bar ($displayPercent / 100) 6 $charFilled $charEmpty
+$maxPercent = 30
+$percentColor = if ($displayPercent -gt ($maxPercent * 0.8)) { "$ESC[33m" } else { "$ESC[32m" }
+$bar = Format-Bar ([math]::Min($displayPercent / $maxPercent, 1.0)) 6 $charFilled $charEmpty
 $progress = $percentColor + $bar + " " + $displayPercent + "%$ESC[0m"
 
 # ===== Usage Providers =====
